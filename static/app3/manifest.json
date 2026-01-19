@@ -1,0 +1,17 @@
+{
+  "id": "/app3/",
+  "name": "Ta9wim",
+  "short_name": "Ta9wim",
+  "start_url": "/app3/",
+  "scope": "/app3/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/static/app3/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
