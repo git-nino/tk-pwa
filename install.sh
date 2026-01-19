@@ -69,24 +69,23 @@ else
   git clone "$REPO_URL" .
 fi
 
-### 7️⃣ Create virtual environment (with system packages)
+### 7️⃣ Preinstall numpy/pandas wheels to avoid compilation
+echo "🔢 Preinstalling numeric libraries (wheels only)..."
+pip install --upgrade pip setuptools wheel
+pip install --only-binary=:all: numpy==1.24.6 pandas==2.1.1 openpyxl==3.1.2 Flask==3.0.0
+
+### 8️⃣ Create virtual environment (with system packages)
 echo "🐍 Creating Python virtual environment..."
 $PYTHON_BIN -m venv --system-site-packages "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-### 8️⃣ Install Python dependencies from requirements.txt
-if [ ! -f requirements.txt ]; then
-  echo -e "${RED}❌ requirements.txt not found${RESET}"
-  exit 1
-fi
-
-echo "📚 Installing Python dependencies..."
+### 9️⃣ Install remaining Python dependencies from requirements.txt
+echo "📚 Installing remaining Python dependencies..."
 pip install --upgrade pip setuptools wheel
-# Use --no-build-isolation to avoid compilation issues in Termux
-pip install --no-build-isolation -r requirements.txt
+pip install -r requirements.txt --no-build-isolation
 deactivate
 
-### 9️⃣ Create run script
+### 🔟 Create run script
 echo "▶️ Creating run script..."
 cat > "$APP_DIR/run.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
@@ -96,7 +95,7 @@ exec python app.py
 EOF
 chmod +x "$APP_DIR/run.sh"
 
-### 🔟 Create Termux service
+### 1️⃣1️⃣ Create Termux service
 echo "⚙️ Creating Termux service: $APP_NAME"
 mkdir -p "$SERVICE_DIR"
 cat > "$SERVICE_DIR/run" <<EOF
@@ -107,7 +106,7 @@ exec python app.py
 EOF
 chmod +x "$SERVICE_DIR/run"
 
-### 1️⃣1️⃣ Enable and start service if runsvdir is running
+### 1️⃣2️⃣ Enable and start service if runsvdir is running
 if [[ -d "$RUNSVDIR" && -x "$PREFIX/bin/sv-enable" ]]; then
   echo "🔁 Enabling and starting service..."
   sv-enable "$APP_NAME" || true
