@@ -37,7 +37,6 @@ REQUIRED_PKGS=(
   clang
   make
   cmake
-  openblas
   libjpeg-turbo
   freetype
   libpng
@@ -53,7 +52,7 @@ for pkg in "${REQUIRED_PKGS[@]}"; do
   fi
 done
 
-### 4️⃣ Install numeric libs via Termux packages
+### 4️⃣ Install numeric libs via Termux packages (precompiled)
 echo "🔢 Installing system numeric libraries (numpy & pandas)..."
 pkg install -y python-numpy python-pandas
 
