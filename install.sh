@@ -16,7 +16,7 @@ RED="\033[1;31m"
 YELLOW="\033[1;33m"
 RESET="\033[0m"
 
-echo -e "${GREEN}íº€ Installing TK-PWA (${APP_NAME}) on Termux${RESET}"
+echo -e "${GREEN}ðŸš€ Installing TK-PWA (${APP_NAME}) on Termux${RESET}"
 
 ### 1ï¸âƒ£ Ensure Termux environment
 if [[ -z "${PREFIX:-}" || ! -d "$PREFIX" ]]; then
@@ -25,18 +25,25 @@ if [[ -z "${PREFIX:-}" || ! -d "$PREFIX" ]]; then
 fi
 
 ### 2ï¸âƒ£ Update packages
-echo "í³¦ Updating Termux packages..."
+echo "ðŸ“¦ Updating Termux packages..."
 pkg update -y && pkg upgrade -y
 
-### 3ï¸âƒ£ Required system packages
+### 3ï¸âƒ£ Install required system packages
 REQUIRED_PKGS=(
   git
   python
   python-pip
   termux-services
+  clang
+  make
+  cmake
+  openblas
+  libjpeg-turbo
+  freetype
+  libpng
 )
 
-echo "í´ Checking system dependencies..."
+echo "ðŸ” Checking system dependencies..."
 for pkg in "${REQUIRED_PKGS[@]}"; do
   if ! command -v "${pkg%%-*}" >/dev/null 2>&1; then
     echo "âž• Installing missing package: $pkg"
@@ -46,40 +53,44 @@ for pkg in "${REQUIRED_PKGS[@]}"; do
   fi
 done
 
-### 4ï¸âƒ£ Enable Termux services directory
+### 4ï¸âƒ£ Install numeric libs via Termux packages
+echo "ðŸ”¢ Installing system numeric libraries (numpy & pandas)..."
+pkg install -y python-numpy python-pandas
+
+### 5ï¸âƒ£ Enable Termux services directory
 mkdir -p "$RUNSVDIR"
 
-### 5ï¸âƒ£ Create app directory
-echo "í³‚ Creating app directory..."
+### 6ï¸âƒ£ Create app directory
+echo "ðŸ“‚ Creating app directory..."
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
 
-### 6ï¸âƒ£ Clone or update repo
+### 7ï¸âƒ£ Clone or update repo
 if [ -d ".git" ]; then
-  echo "í´„ Updating repository..."
+  echo "ðŸ”„ Updating repository..."
   git pull
 else
   echo "â¬‡ï¸ Cloning repository..."
   git clone "$REPO_URL" .
 fi
 
-### 7ï¸âƒ£ Create virtual environment
-echo "í° Creating Python virtual environment..."
-$PYTHON_BIN -m venv "$VENV_DIR"
+### 8ï¸âƒ£ Create virtual environment (with system packages)
+echo "ðŸ Creating Python virtual environment..."
+$PYTHON_BIN -m venv --system-site-packages "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-### 8ï¸âƒ£ Install Python requirements
+### 9ï¸âƒ£ Install Python dependencies from requirements.txt
 if [ ! -f requirements.txt ]; then
   echo -e "${RED}âŒ requirements.txt not found${RESET}"
   exit 1
 fi
 
-echo "í³š Installing Python dependencies..."
+echo "ðŸ“š Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 deactivate
 
-### 9ï¸âƒ£ Create run script
+### ðŸ”Ÿ Create run script
 echo "â–¶ï¸ Creating run script..."
 cat > "$APP_DIR/run.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
@@ -89,10 +100,9 @@ exec python app.py
 EOF
 chmod +x "$APP_DIR/run.sh"
 
-### í´Ÿ Create Termux service
+### 1ï¸âƒ£1ï¸âƒ£ Create Termux service
 echo "âš™ï¸ Creating Termux service: $APP_NAME"
 mkdir -p "$SERVICE_DIR"
-
 cat > "$SERVICE_DIR/run" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
 cd "$APP_DIR"
@@ -101,9 +111,9 @@ exec python app.py
 EOF
 chmod +x "$SERVICE_DIR/run"
 
-### í´Ÿ Enable and start service if runsvdir is running
+### 1ï¸âƒ£2ï¸âƒ£ Enable and start service if runsvdir is running
 if [[ -d "$RUNSVDIR" && -x "$PREFIX/bin/sv-enable" ]]; then
-  echo "í´ Enabling and starting service..."
+  echo "ðŸ” Enabling and starting service..."
   sv-enable "$APP_NAME" || true
   sv up "$APP_NAME" || true
   echo "âœ… Service started"
@@ -115,10 +125,10 @@ fi
 echo ""
 echo "âœ… Installation completed successfully!"
 echo ""
-echo "í³Œ NEXT STEP:"
+echo "ðŸ“Œ NEXT STEP:"
 echo "âš ï¸ Close Termux completely (swipe away) and reopen it."
-echo "í±‰ After reopening, the service will start automatically."
+echo "ðŸ‘‰ After reopening, the service will start automatically."
 echo ""
-echo "í³¥ Commands available after restart:"
+echo "ðŸ“¥ Commands available after restart:"
 echo "   sv status $APP_NAME"
 echo ""
