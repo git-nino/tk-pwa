@@ -52,19 +52,15 @@ for pkg in "${REQUIRED_PKGS[@]}"; do
   fi
 done
 
-### 4️⃣ Install numeric libs via Termux packages (precompiled)
-echo "🔢 Installing system numeric libraries (numpy & pandas)..."
-pkg install -y python-numpy python-pandas
-
-### 5️⃣ Enable Termux services directory
+### 4️⃣ Enable Termux services directory
 mkdir -p "$RUNSVDIR"
 
-### 6️⃣ Create app directory
+### 5️⃣ Create app directory
 echo "📂 Creating app directory..."
 mkdir -p "$APP_DIR"
 cd "$APP_DIR"
 
-### 7️⃣ Clone or update repo
+### 6️⃣ Clone or update repo
 if [ -d ".git" ]; then
   echo "🔄 Updating repository..."
   git pull
@@ -73,23 +69,24 @@ else
   git clone "$REPO_URL" .
 fi
 
-### 8️⃣ Create virtual environment (with system packages)
+### 7️⃣ Create virtual environment (with system packages)
 echo "🐍 Creating Python virtual environment..."
 $PYTHON_BIN -m venv --system-site-packages "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 
-### 9️⃣ Install Python dependencies from requirements.txt
+### 8️⃣ Install Python dependencies from requirements.txt
 if [ ! -f requirements.txt ]; then
   echo -e "${RED}❌ requirements.txt not found${RESET}"
   exit 1
 fi
 
 echo "📚 Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+pip install --upgrade pip setuptools wheel
+# Use --no-build-isolation to avoid compilation issues in Termux
+pip install --no-build-isolation -r requirements.txt
 deactivate
 
-### 🔟 Create run script
+### 9️⃣ Create run script
 echo "▶️ Creating run script..."
 cat > "$APP_DIR/run.sh" <<EOF
 #!/data/data/com.termux/files/usr/bin/bash
@@ -99,7 +96,7 @@ exec python app.py
 EOF
 chmod +x "$APP_DIR/run.sh"
 
-### 1️⃣1️⃣ Create Termux service
+### 🔟 Create Termux service
 echo "⚙️ Creating Termux service: $APP_NAME"
 mkdir -p "$SERVICE_DIR"
 cat > "$SERVICE_DIR/run" <<EOF
@@ -110,7 +107,7 @@ exec python app.py
 EOF
 chmod +x "$SERVICE_DIR/run"
 
-### 1️⃣2️⃣ Enable and start service if runsvdir is running
+### 1️⃣1️⃣ Enable and start service if runsvdir is running
 if [[ -d "$RUNSVDIR" && -x "$PREFIX/bin/sv-enable" ]]; then
   echo "🔁 Enabling and starting service..."
   sv-enable "$APP_NAME" || true
